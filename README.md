@@ -31,10 +31,12 @@ Per configurare il progetto in locale, segui questi passaggi:
    ```bash
    git clone [https://github.com/tuo-utente/tuo-progetto.git](https://github.com/PaoloCamedda/BenchmarkProgrammLanguage.git)
    cd BenchmarkProgrammLanguage
+   chmod +x run_benchmark.sh
 
 
 ## Utilizzo 
 lanciare il comado 
-```bash./run_benchmark.sh -h 
+   ```bash
+   ./run_benchmark.sh -h 
 
 per ottenere le informazioni 
