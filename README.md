@@ -34,4 +34,7 @@ Per configurare il progetto in locale, segui questi passaggi:
 
 
 ## Utilizzo 
-lanciare il comado ./run_benchmark.sh -h per ottenere le informazioni 
+lanciare il comado 
+```bash./run_benchmark.sh -h 
+
+per ottenere le informazioni 
