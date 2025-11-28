@@ -51,7 +51,7 @@ for algo in df["algoritmo"].unique():
             axes[0].set_xlim(x_min, x_max)
 
            
-            axes[0].set_yscale("log")
+            axes[0].set_yscale("log", base=10)
             axes[0].set_ylim(1e-3, 2.0)  # adatta in base ai tuoi dati
             axes[0].set_yticks([1e-3, 1e-2, 1e-1, 1.0, 2.0])
             axes[0].get_yaxis().set_major_formatter(ticker.ScalarFormatter())

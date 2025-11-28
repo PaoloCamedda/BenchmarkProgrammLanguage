@@ -63,10 +63,12 @@ Per configurare il progetto in locale, segui questi passaggi:
 esempio
     ```bash
    ./run_benchmark.sh -r 5 -w 0 -n 5-20:5 -a fib -t rc -l py
+
     ```
 
 2. se si è lanciato il comando con range di numeri non usare -a ms,qs e usare il parser per range troverete i risultati nella cartella Results/csv altrimenti parser_single.py
    ```bash
+   sudo chown -R $USER:$USER Results
    python3 parser_range.py
    ```
    
@@ -75,3 +77,4 @@ esempio
    ```bash
    python3 plot_range.py
    ```
+![Comparazione](.comparazione.png)

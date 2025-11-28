@@ -53,6 +53,10 @@ for json_file in glob.glob(os.path.join(RESULT_DIR, "*_time.json")):
 
         # Calcola statistiche per ogni input
         for input_val in set(k[0] for k in energy_data.keys()):
+
+            if input_val.startswith("input_") and input_val.endswith(".txt"):
+                input_val = input_val.replace("input_", "").replace(".txt", "")
+
             stats_map = {}
             for dominio in ["PKG", "DRAM"]:
                 key = (input_val, dominio)

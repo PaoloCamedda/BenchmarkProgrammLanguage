@@ -1,5 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
+#include <unistd.h>   // chdir, readlink
+#include <libgen.h>   // dirname
+#include <string.h>   // strerror
+#include <errno.h>
 
 // Funzione di utilità per lo scambio (swap)
 void swap(int* a, int* b) {
@@ -10,18 +15,15 @@ void swap(int* a, int* b) {
 
 // Funzione di Partizione (Partition)
 int partition(int arr[], int low, int high) {
-    // Pivot scelto come elemento più a destra
-    int pivot = arr[high]; 
-    int i = (low - 1); // Indice del più piccolo elemento
+    int pivot = arr[high];
+    int i = (low - 1);
 
     for (int j = low; j <= high - 1; j++) {
-        // Se l'elemento corrente è più piccolo del pivot
         if (arr[j] < pivot) {
-            i++; // Incrementa l'indice del piccolo elemento
+            i++;
             swap(&arr[i], &arr[j]);
         }
     }
-    // Scambia il pivot (arr[high]) con l'elemento in arr[i+1]
     swap(&arr[i + 1], &arr[high]);
     return (i + 1);
 }
@@ -29,10 +31,7 @@ int partition(int arr[], int low, int high) {
 // Funzione principale di Quick Sort
 void quick_sort(int arr[], int low, int high) {
     if (low < high) {
-        // pi è l'indice di partizionamento
         int pi = partition(arr, low, high);
-
-        // Ordina ricorsivamente gli elementi prima e dopo la partizione
         quick_sort(arr, low, pi - 1);
         quick_sort(arr, pi + 1, high);
     }
@@ -46,10 +45,24 @@ void printArray(int A[], int size) {
 }
 
 // --- Gestione Input/Output ---
-int main() {
+int main(void) {
+    // Porta il working directory nella cartella dell’eseguibile
+    char exe_path[PATH_MAX];
+    ssize_t len = readlink("/proc/self/exe", exe_path, sizeof(exe_path) - 1);
+    if (len == -1) {
+        fprintf(stderr, "Errore: readlink fallita: %s\n", strerror(errno));
+        return 1;
+    }
+    exe_path[len] = '\0';
+    char *dir = dirname(exe_path);
+    if (chdir(dir) != 0) {
+        fprintf(stderr, "Errore: chdir(%s) fallito: %s\n", dir, strerror(errno));
+        return 1;
+    }
+
     FILE *file = fopen("input.txt", "r");
-    if (file == NULL) {
-        printf("Errore: impossibile aprire il file 'input.txt'\n");
+    if (!file) {
+        fprintf(stderr, "Errore: impossibile aprire 'input.txt' in %s: %s\n", dir, strerror(errno));
         return 1;
     }
 
@@ -57,30 +70,30 @@ int main() {
     int count = 0;
     int number;
 
-    // Legge i numeri dal file (stessa logica del Merge Sort C)
     while (fscanf(file, "%d", &number) == 1) {
-        arr = (int*)realloc(arr, (count + 1) * sizeof(int));
-        if (arr == NULL) {
-            printf("Errore di allocazione della memoria\n");
+        int *tmp = realloc(arr, (count + 1) * sizeof(int));
+        if (!tmp) {
+            fprintf(stderr, "Errore di allocazione della memoria\n");
+            free(arr);
             fclose(file);
             return 1;
         }
-        arr[count] = number;
-        count++;
+        arr = tmp;
+        arr[count++] = number;
     }
     fclose(file);
 
     if (count == 0) {
-        printf("Il file 'input.txt' è vuoto o non contiene numeri validi.\n");
-        if (arr != NULL) free(arr);
+        fprintf(stderr, "Il file 'input.txt' è vuoto o non contiene numeri validi.\n");
+        free(arr);
         return 0;
     }
-    
+
     printf("Array non ordinato: ");
     printArray(arr, count);
 
     quick_sort(arr, 0, count - 1);
-    
+
     printf("Array ordinato: ");
     printArray(arr, count);
 
