@@ -43,7 +43,7 @@ Per configurare il progetto in locale, segui questi passaggi:
    ```
 
 3. rimuovere le conessioni (Facoltativo, on se si vuole riattivare ) 
-  ```bash
+   ```bash
    nmcli radio all off
    ```
 
@@ -57,14 +57,13 @@ Per configurare il progetto in locale, segui questi passaggi:
 
 ## Utilizzo 
 1. lanciare il comado per ottenere le informazioni 
-   ```bash
+      ```bash
    ./run_benchmark.sh -h 
    ```
 esempio
-    ```bash
+      ```bash
    ./run_benchmark.sh -r 5 -w 0 -n 5-20:5 -a fib -t rc -l py
-
-    ```
+   ```
 
 2. se si è lanciato il comando con range di numeri non usare -a ms,qs e usare il parser per range troverete i risultati nella cartella Results/csv altrimenti parser_single.py
    ```bash
