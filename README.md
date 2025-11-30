@@ -60,6 +60,10 @@ I test sono stati basati su **kernel linux** con ambiente grafico **i3** e **cpu
    ```
 
 
+### Notare 
+   che per lanciare tutti gli algoritmi non è possibile poiche il parametro -t ha bisogno perforza di it oppure rc oppure it,rc
+   in piu si noti che il comando -N non è possibile eseguirlo per i test in python e javascript poiche lascia direttamente gli script come se fossero eseguibili compilati
+
 ## Utilizzo 
 1. lanciare il comado per ottenere le informazioni 
       ```bash
@@ -87,3 +91,4 @@ I test sono stati basati su **kernel linux** con ambiente grafico **i3** e **cpu
 
 
 ## Licenza
+Questo progetto è rilasciato sotto licenza [MIT License](LICENSE).
