@@ -1,10 +1,11 @@
 #!/bin/bash
-set -u
+set -euo pipefail
 
 # Uso:
 # ./run_benchmark.sh -r 5 -w 2 -n 20 -a fib -t it -l c,java
 # ./run_benchmark.sh -r 5 -w 0 -n 100-5000:100 -a ms,qs -l all -N
 
+# === VARIABILI D AMBIENTE ====================================================
 runs=10
 warps=0
 input=10
@@ -14,6 +15,7 @@ langs="all"
 noshell=false
 clean=false
 
+# === CICLO PER LE VARIABILI PASSATE DA TERMINALE ========================
 while getopts "r:w:n:a:t:l:dhN" opt; do
   case $opt in
     r) runs=$OPTARG ;;
@@ -39,6 +41,8 @@ while getopts "r:w:n:a:t:l:dhN" opt; do
     *) exit 1 ;;
   esac
 done
+
+
 shift $((OPTIND-1))
 
 PROJECT_ROOT="$(pwd)"
@@ -47,17 +51,20 @@ RESULT_DIR="$PROJECT_ROOT/Results/raw"
 mkdir -p "$RESULT_DIR"
 
 if [ "$clean" = true ]; then
-    echo "⥁   Pulizia dei file in $RESULT_DIR..."
-    rm -f "$RESULT_DIR"/* "$PROJECT_ROOT"/input_*.txt
+    echo "⥁   Pulizia dei file in $RESULT_DIR e input file......."
+    rm -f "$PROJECT_ROOT"/input_*.txt
+    rm -f "$RESULT_DIR"/*_time.json "$RESULT_DIR"/*_energy.txt "$RESULT_DIR"/tmp_*.json
 fi
 
+# === Mappa abbreviazioni ===================================================================
 declare -A algo_map=( ["fib"]="Fibonacci" ["fat"]="Fattoriale" ["ms"]="MergeSort" ["qs"]="QuickSort" )
 declare -A tipo_map=( ["it"]="iterativo" ["rc"]="ricorsivo" )
 declare -A lang_map=( ["c"]="c" ["java"]="java" ["py"]="python" ["rs"]="rs" ["js"]="js" )
 
+# ===  FUNZIONE PER CAPIRE SE È UNA ALGORITMO DI ORDINAMENTO ================================================
 is_sort_algo() { [[ "$1" == "MergeSort" || "$1" == "QuickSort" ]]; }
 
-# Genera input unico e symlink
+# === Genera input unico e symlink ==========================================================================
 generate_input_file() {
     local size=$1
     local file="$PROJECT_ROOT/input_${size}.txt"
@@ -65,8 +72,33 @@ generate_input_file() {
     shuf -i 1-10000000 -n "$size" > "$file"
     ln -sf "$file" "$BASE_DIR/MergeSort/input.txt"
     ln -sf "$file" "$BASE_DIR/QuickSort/input.txt"
+    
 }
-# === Funzione =================== 
+
+# === FUNZIONE PER IL DELTA ENERGETICO COSI NON HO NUMERI NEGATIVI ============================================
+rapl_delta() {
+    local start=$1 end=$2 max=$3
+    # Se non conosci il max (0), fai fallback al delta semplice evitando negativi
+    if [ "$max" -eq 0 ]; then
+        # clamp a zero se end < start (eventi anomali)
+        if [ "$end" -lt "$start" ]; then
+            echo 0
+        else
+            echo $(( end - start ))
+        fi
+        return
+    fi
+
+    # Gestione wrap: se end < start, il contatore è ripartito da zero
+    if [ "$end" -lt "$start" ]; then
+        echo $(( (max - start) + end ))
+    else
+        echo $(( end - start ))
+    fi
+}
+
+
+# === FUNZIONE PER L ESECUZIONE DEI TEST=======================================================================
 
 run_one() {
     local algo=$1 tipo=$2 lang=$3
@@ -96,6 +128,7 @@ run_one() {
             else
                 hyperfine "${hf_opts[@]}" "$dir/$algo.c.out"
             fi
+
             ;;
         rs)
             rustc "$dir/$algo.rs" -o "$dir/$algo.rs.out" || return 1
@@ -133,10 +166,56 @@ run_one() {
             ;;
     esac
 
-    cat "$tmp_file" >> "$time_file"; rm -f "$tmp_file"
+    cat "$tmp_file" >> "$time_file"
+    rm -f "$tmp_file"
+    
+
+
+
+    # === CALCOLO DELL ENERGIA LETTA DA CONTATORE ======================================================
+
+    energy_file="$RESULT_DIR/${algo}_${tipo}_${lang}_energy.txt"
+    total_pkg=0
+    total_dram=0
+    dram_available=false
+    [ -f /sys/class/powercap/intel-rapl:0:1/energy_uj ] && dram_available=true
+
+    max_pkg=$(cat /sys/class/powercap/intel-rapl:0/max_energy_range_uj 2>/dev/null || echo 0)
+    max_dram=$(cat /sys/class/powercap/intel-rapl:0:1/max_energy_range_uj 2>/dev/null || echo 0)
+
+    for i in $(seq 1 "$runs"); do
+        start_pkg=$(sudo cat /sys/class/powercap/intel-rapl:0/energy_uj 2>/dev/null || echo 0)
+        if $dram_available; then
+            start_dram=$(sudo cat /sys/class/powercap/intel-rapl:0:1/energy_uj 2>/dev/null || echo 0)
+        fi
+
+        # esecuzione programma
+        case $lang in
+            c) "$dir/$algo.c.out" $input_arg > /dev/null ;;
+            rs) "$dir/$algo.rs.out" $input_arg > /dev/null ;;
+            java) java -cp "$dir" "$algo" $input_arg > /dev/null ;;
+            js) node "$dir/$algo.js" $input_arg > /dev/null ;;
+            py|python) python3 "$dir/$algo.py" $input_arg > /dev/null ;;
+        esac
+
+        end_pkg=$(sudo cat /sys/class/powercap/intel-rapl:0/energy_uj 2>/dev/null || echo 0)
+        run_energy_pkg=$(rapl_delta "$start_pkg" "$end_pkg" "$max_pkg")
+        echo "$algo;$tipo;$lang;$input;$i;PKG;$run_energy_pkg" >> "$energy_file"
+        total_pkg=$((total_pkg + run_energy_pkg))
+
+        if $dram_available; then
+            end_dram=$(sudo cat /sys/class/powercap/intel-rapl:0:1/energy_uj 2>/dev/null || echo 0)
+            run_energy_dram=$(rapl_delta "$start_dram" "$end_dram" "$max_dram")
+            echo "$algo;$tipo;$lang;$input;$i;DRAM;$run_energy_dram" >> "$energy_file"
+            total_dram=$((total_dram + run_energy_dram))
+        fi
+    done
 }
 
-# === Gestione input come range =========================
+
+
+
+# === Gestione input come range =================================================================
 inputs=()
 if [[ "$input" =~ ^[0-9]+-[0-9]+:[0-9]+$ ]]; then
     start=${input%-*}
@@ -152,6 +231,8 @@ tests=()
 IFS=',' read -ra algo_list <<< "$algos"
 IFS=',' read -ra tipo_list <<< "$tipi"
 IFS=',' read -ra lang_list <<< "$langs"
+
+# === 
 
 add_tests_for_dir() {
     local algo_name="$1" tipo_name="$2" dir="$3"
@@ -215,3 +296,7 @@ for in_val in "${inputs[@]}"; do
 done
 
 echo -e "\n⟶ Tutti i $total test completati"
+
+
+
+

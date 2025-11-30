@@ -1,10 +1,11 @@
 # BenchmarkProgrammLanguage
 
-Programmazione egreen e test sul consumo energetico dei vari linguaggi di programmazione 
+Programmazione egreen e test sul consumo energetico dei vari linguaggi di programmazione a confronto
 
 
 
 ## Indice 
+* [Premessa](#premessa)
 * [Installazione](#installazione)
 * [Utilizzo](#utilizzo)
 * [Licenza](#licenza)
@@ -12,20 +13,24 @@ Programmazione egreen e test sul consumo energetico dei vari linguaggi di progra
 
 
 
-## Installazione
-i test sono stati basati su ambiente linux i3 con cpu intel cosi da avere a disposizione i contatori RAPL
-I test sono stati efettuati su Ubuntu 24.04.3 LTS
-e processore intel core7 
+## Premessa
+I test sono stati basati su **kernel linux** con ambiente grafico **i3** e **cpu intel** cosi da avere a disposizione i contatori RAPL, solitamente in **(/sys/class/powercap/intel-rapl:0/energy_uj)** e un sistema molto leggero e con pochi processi attivi, dato che andremo a disattivare anche altri processi all interno dell ambiente di test.
 
-Per configurare il progetto in locale, segui questi passaggi:
+
+
+
+## Installazione
 
 ### Prerequisiti
+* Ubuntu 24.04.3 LTS o equivalente
+* CPU intel core7 o equivalente
 * Python 3.12.3
 * Node.js v18.19.1
 * gcc 13.3.0 (Ubuntu 13.3.0-6ubuntu2~24.04) 
 * openjdk version "21.0.9" 2025-10-21
 * rustc 1.91.1 (ed61e7d7e 2025-11-07)
 * hyperfine 
+* jq-1.7
 
 
 
@@ -77,3 +82,8 @@ Per configurare il progetto in locale, segui questi passaggi:
    python3 plot_range.py
    ```
 ![Comparazione](.comparazione.png)
+
+
+
+
+## Licenza

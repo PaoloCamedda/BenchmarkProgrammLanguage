@@ -33,8 +33,6 @@ for json_file in glob.glob(os.path.join(RESULT_DIR, "*_time.json")):
     # === Energia da file TXT ===
     energy_file = os.path.join(RESULT_DIR, f"{base}_energy.txt")
 
-    # valori iniziali
-    energia_pkg = energia_dram = None
     stats_pkg = stats_dram = None
     energia_totale_media = energia_totale_std = energia_totale_min = energia_totale_max = None
 
@@ -45,7 +43,6 @@ for json_file in glob.glob(os.path.join(RESULT_DIR, "*_time.json")):
         with open(energy_file, "r") as f:
             for line in f:
                 parts = line.strip().split(";")
-                # formato: algo;tipo;lang;input;run;dominio;valore
                 if len(parts) < 7:
                     continue
                 run = parts[4]
@@ -59,23 +56,36 @@ for json_file in glob.glob(os.path.join(RESULT_DIR, "*_time.json")):
 
         domini_stats = {}
         for dominio, values_uj in values_by_domain.items():
+            values_j = [v / 1e6 for v in values_uj]
+            # Media: se c'è avg usa quello, altrimenti calcola dai run
             if dominio in media_by_domain:
-                values_j = [v / 1e6 for v in values_uj]
                 media_j = media_by_domain[dominio] / 1e6
-                std_j = float(np.std(values_j, ddof=1))
-                min_j = min(values_j)
-                max_j = max(values_j)
-                domini_stats[dominio] = (media_j, std_j, min_j, max_j)
+            else:
+                media_j = float(np.mean(values_j)) if values_j else None
+
+            if values_j:
+                std_j = float(np.std(values_j, ddof=1)) if len(values_j) > 1 else 0.0
+                min_j = float(min(values_j))
+                max_j = float(max(values_j))
+            else:
+                std_j = min_j = max_j = None
+
+            domini_stats[dominio] = (media_j, std_j, min_j, max_j)
 
         # estrai PKG e DRAM
         stats_pkg = domini_stats.get("PKG")
         stats_dram = domini_stats.get("DRAM")
 
-        if stats_pkg and stats_dram:
-            energia_totale_media = stats_pkg[0] + stats_dram[0]
-            energia_totale_std   = np.sqrt(stats_pkg[1]**2 + stats_dram[1]**2)
-            energia_totale_min   = stats_pkg[2] + stats_dram[2]
-            energia_totale_max   = stats_pkg[3] + stats_dram[3]
+        # Fallback: se DRAM manca, forzala a 0.0
+        if stats_dram is None:
+            stats_dram = (0.0, 0.0, 0.0, 0.0)
+
+        # Totale energia
+        if stats_pkg is not None:
+            energia_totale_media = (stats_pkg[0] or 0.0) + (stats_dram[0] or 0.0)
+            energia_totale_std   = np.sqrt((stats_pkg[1] or 0.0)**2 + (stats_dram[1] or 0.0)**2)
+            energia_totale_min   = (stats_pkg[2] or 0.0) + (stats_dram[2] or 0.0)
+            energia_totale_max   = (stats_pkg[3] or 0.0) + (stats_dram[3] or 0.0)
 
     # === Scrivi una sola riga con tutte le colonne ===
     rows.append([
