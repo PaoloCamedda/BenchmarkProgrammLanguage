@@ -91,3 +91,4 @@ I test sono stati basati su **kernel linux** con ambiente grafico **i3** e **cpu
 
 
 ## Licenza
+Questo progetto è rilasciato sotto licenza [MIT License](LICENSE).
