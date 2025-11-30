@@ -42,33 +42,36 @@ for algo in df["algoritmo"].unique():
             fig, axes = plt.subplots(1, 3, figsize=(18, 5))
 
             # Tempo
-            axes[0].errorbar(x, tempo, yerr=tempo_err, fmt="-o", color="black", label="Tempo medio")
-            axes[0].errorbar(x, tempo, yerr=tempo_err, fmt="none", ecolor="red", capsize=4, label="Deviazione")
-
             axes[0].set_title(f"Tempo medio - {algo} ({lang}, {tipo})")
-            axes[0].set_xlabel("Input")
-            axes[0].set_ylabel("Tempo medio (s)")
+
+            axes[0].errorbar(x, tempo, yerr=tempo_err, fmt="o", color="black", markersize=6, label="Tempo medio")
+            axes[0].errorbar(x, tempo, yerr=tempo_err, fmt="none", ecolor="red", capsize=4, elinewidth=1.5, label="Deviazione")
+
+            axes[0].set_xticks(x)
+            axes[0].tick_params(axis='x', rotation=45)
             axes[0].set_xlim(x_min, x_max)
+            axes[0].set_xlabel("Input")
 
-           
-            axes[0].set_yscale("log", base=10)
-            axes[0].set_ylim(1e-3, 2.0)  # adatta in base ai tuoi dati
-            axes[0].set_yticks([1e-3, 1e-2, 1e-1, 1.0, 2.0])
+            axes[0].set_ylabel("Tempo medio (s)")
+            axes[0].set_yscale("log")
+            axes[0].set_ylim(1e-3, 10.0) 
+            axes[0].set_yticks([1e-3, 1e-2, 1e-1, 1, 10])
             axes[0].get_yaxis().set_major_formatter(ticker.ScalarFormatter())
-            # tick ogni 0.1 secondi
 
-            axes[0].legend(loc="upper left")                 # aggiungi leggenda
+            axes[0].legend(loc="upper left")                 
             axes[0].grid(True, linestyle="--", alpha=0.7)
 
             # Energia
             axes[1].set_title(f"Energia media- {algo} ({lang}, {tipo})")
-            axes[1].errorbar(x, energia, yerr=energia_err, fmt="-o", color="black", label="Energia totale")
-            axes[1].errorbar(x, energia, yerr=energia_err, fmt="none", ecolor="red", capsize=4, label="Deviazione")
+
+            axes[1].errorbar(x, energia, yerr=energia_err, fmt="-o", color="black", arkersize=6, label="Energia totale")
+            axes[1].errorbar(x, energia, yerr=energia_err, fmt="none", ecolor="red", capsize=4, elinewidth=1.5, label="Deviazione")
 
             axes[1].set_xlabel("Input")
             axes[1].set_ylabel("Energia (J)")
-            axes[1].set_ylim(0.0, 2.0)
-            axes[1].set_yticks(np.arange(0.0, 2.5, 0.5))
+            axes[1].set_ylim(0.0, 10.0)  # da 0 a 10 Joule
+            axes[1].set_yticks(np.arange(0.0, 11.0, 2.0))
+
             axes[1].grid(True, linestyle="--", alpha=0.7)
             axes[1].legend(loc="upper left")
 
@@ -76,9 +79,9 @@ for algo in df["algoritmo"].unique():
             axes[2].plot(x, potenza, "-o", color="black")
             axes[2].set_title(f"Potenza (Energia x Tempo) - {algo} ({lang}, {tipo})")
             axes[2].set_xlabel("Input")
-            axes[2].axhline(y=5.0, color="red", linestyle="--", label="Potenza fissa 5 W")
-            axes[2].set_ylim(0.0, 6.0)  # range leggermente più alto per visibilità
-            axes[2].set_yticks(np.arange(0.0, 6.5, 0.5))
+            #axes[2].axhline(y=5.0, color="red", linestyle="--", label="Potenza fissa 5 W")
+            axes[2].set_ylim(0.0, 10.0)  # da 0 a 10 Watt
+            axes[2].set_yticks(np.arange(0.0, 11.0, 2.0))
             axes[2].legend(loc="upper left")
 
             axes[2].grid(True, linestyle="--", alpha=0.7)

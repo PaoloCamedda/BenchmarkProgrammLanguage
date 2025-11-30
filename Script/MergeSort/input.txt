@@ -1,1 +1,1 @@
-/home/ipaolo/Scrivania/BenchmarkProgrammLanguage/input_3000.txt
+/home/ipaolo/Scrivania/BenchmarkProgrammLanguage/input_100000.txt

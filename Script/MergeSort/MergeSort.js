@@ -1,5 +1,6 @@
 const fs = require('fs');
 
+
 function mergeSort(arr) {
     if (arr.length <= 1) {
         return arr;
@@ -36,7 +37,7 @@ function merge(left, right) {
 // --- Gestione Input/Output (Node.js) ---
 try {
     // Legge il contenuto del file come stringa
-    const data = fs.readFileSync('input.txt', 'utf8');
+    const data = fs.readFileSync('Script/MergeSort/input.txt', 'utf8');
     
     // Filtra e converte in numeri interi
     const arr = data

@@ -35,7 +35,7 @@ function quickSort(arr, low, high) {
 
 // --- Gestione Input/Output (Node.js) ---
 try {
-    const data = fs.readFileSync('input.txt', 'utf8');
+    const data = fs.readFileSync('Script/QuickSort/input.txt', 'utf8');
     
     const arr = data
         .trim() 
